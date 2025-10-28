@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Ambientes Virtuais (para seus colegas)
+.venv/
+venv/
+env/
+
+# Imagem de saída
+*.png
