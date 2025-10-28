@@ -6,109 +6,181 @@ from scipy.ndimage import gaussian_filter
 
 # --- Configurações ---
 ARQUIVO_DADOS = 'dados_medicoes.csv'
-COLUNAS_PARA_MAPEAR = ['DBSERVIDOR', 'DBVISITANTE', 'DBALUNO']
+ARQUIVO_PORTAS = 'portas_corredor.csv'
+COLUNAS_PARA_MAPEAR = ['UTFPR-SERVIDOR', 'UTFPR-VISITANTE', 'UTFPR-ALUNO']
 SIGMA_SUAVIZACAO = 15 # Intensidade do "blur" (mapa de relevo)
 
-# --- [ IMPORTANTE ] CONFIGURAÇÕES DO MAPA ---
-# Ajustado para o novo layout de corredor 30x10 (X > Y)
-X_MIN = 0.0   # Início do corredor
-X_MAX = 30.0  # Fim do corredor (comprido)
-Y_MIN = 0.0   # Parede de baixo
-Y_MAX = 10.0  # Parede de cima (estreito)
+VALOR_PONTO_MORTO = -100
+
+# [ NOVO ] Define a qualidade (dots per inch) da imagem final.
+# 100 é o padrão. 300 é alta qualidade para impressão.
+DPI_SAIDA = 300 
+# ---------------------
+
+# --- CONFIGURAÇÕES DE DESENHO DO CORREDOR E PORTAS ---
+EXTENSAO_PORTA_PADRAO = 0.81
+EXTENSAO_PORTA_EXCECAO = 0.405
+PORTAS_EXCECAO = ['CQ211', 'Porta do Banheiro']
+
+LARGURA_LINHA_CORREDOR = 3
+COR_LINHA_CORREDOR = 'black' 
+
+LARGURA_LINHA_PORTA = 4
+COR_LINHA_PORTA = 'red'
 # -------------------------------------
 
-def limpar_dados_db(df, colunas_db):
-    """Converte colunas de $dB$ para numérico, tratando 'XXX' e outros erros."""
+def limpar_dados_db(df, colunas_db, dead_spot_value):
     for col in colunas_db:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
+            df[col] = df[col].fillna(dead_spot_value)
     return df
 
-def generate_heatmap(df, column_name, output_filename, x_min, x_max, y_min, y_max):
+def draw_corridor_and_doors(ax, df_portas, x_min_plot, x_max_plot, y_parede_inf, y_parede_sup):
     """
-    Gera e salva um mapa de calor suave para uma coluna de $dB$ específica.
+    Desenha o retângulo do corredor (preto) e as portas (vermelho) com nomes.
     """
+    
+    # 1. Desenhar o retângulo do corredor (PRETO)
+    ax.plot([x_min_plot, x_max_plot], [y_parede_inf, y_parede_inf], color=COR_LINHA_CORREDOR, linewidth=LARGURA_LINHA_CORREDOR, zorder=3)
+    ax.plot([x_min_plot, x_max_plot], [y_parede_sup, y_parede_sup], color=COR_LINHA_CORREDOR, linewidth=LARGURA_LINHA_CORREDOR, zorder=3)
+    ax.plot([x_min_plot, x_min_plot], [y_parede_inf, y_parede_sup], color=COR_LINHA_CORREDOR, linewidth=LARGURA_LINHA_CORREDOR, zorder=3)
+    ax.plot([x_max_plot, x_max_plot], [y_parede_inf, y_parede_sup], color=COR_LINHA_CORREDOR, linewidth=LARGURA_LINHA_CORREDOR, zorder=3)
+    
+    # 2. Desenhar as portas (vermelho) e seus nomes
+    for index, row in df_portas.iterrows():
+        lugar = row['LUGAR']
+        x_centro = row['X_CENTRO']
+        y_posicao = row['Y_POSICAO']
+
+        extensao = EXTENSAO_PORTA_EXCECAO if lugar in PORTAS_EXCECAO else EXTENSAO_PORTA_PADRAO
+        
+        x_inicio_porta = x_centro - extensao
+        x_fim_porta = x_centro + extensao
+        
+        # Desenhar a linha da porta
+        if np.isclose(y_posicao, y_parede_inf):
+            ax.plot([x_inicio_porta, x_fim_porta], [y_parede_inf, y_parede_inf], color=COR_LINHA_PORTA, linewidth=LARGURA_LINHA_PORTA, zorder=4)
+            # Texto da porta BRANCO
+            ax.text(x_centro, y_parede_inf + 0.05, lugar, # 0.05 é um pequeno offset acima da porta
+                    color='white', fontsize=8, ha='center', va='bottom', zorder=5)
+        elif np.isclose(y_posicao, y_parede_sup):
+            ax.plot([x_inicio_porta, x_fim_porta], [y_parede_sup, y_parede_sup], color=COR_LINHA_PORTA, linewidth=LARGURA_LINHA_PORTA, zorder=4)
+            # Texto da porta BRANCO
+            ax.text(x_centro, y_parede_sup - 0.05, lugar, # 0.05 é um pequeno offset abaixo da porta
+                    color='white', fontsize=8, ha='center', va='top', zorder=5)
+
+def generate_heatmap(df, df_portas, column_name, output_filename, 
+                     x_min_plot, x_max_plot, y_min_plot, y_max_plot, 
+                     y_parede_inf, y_parede_sup):
+    
     print(f"\n--- Iniciando geração do mapa para: {column_name} ---")
     
-    # 1. Limpar dados específicos
     df_clean = df.dropna(subset=['X', 'Y', column_name])
     
     if df_clean.empty:
-        print(f"Erro: Não há dados válidos (com X, Y e {column_name}) para plotar.")
+        print(f"Erro: Não há dados válidos (com X, Y) para plotar.")
         return 
 
     print(f"Dados processados. {len(df_clean)} pontos válidos para '{column_name}'.")
 
-    # 2. Preparar pontos
     x = df_clean['X'].values
     y = df_clean['Y'].values
     z = df_clean[column_name].values
 
-    # 3. Criar grade (Alta resolução)
-    grid_x, grid_y = np.mgrid[x_min:x_max:500j, y_min:y_max:500j]
+    grid_x, grid_y = np.mgrid[x_min_plot:x_max_plot:500j, y_min_plot:y_max_plot:500j]
 
-    # 4. Interpolar (Linear)
     print("Interpolando dados (Método Linear)...")
     grid_z_linear = griddata((x, y), z, (grid_x, grid_y), method='linear')
 
-    # 5. Interpolar (Preencher cantos)
     print("Interpolando dados (Método Vizinho Próximo)...")
     grid_z_nearest = griddata((x, y), z, (grid_x, grid_y), method='nearest')
     
-    # 6. Combinar
     grid_z_linear[np.isnan(grid_z_linear)] = grid_z_nearest[np.isnan(grid_z_linear)]
     
-    # 7. Suavizar (O "mapa de relevo")
     print(f"Suavizando o mapa (Sigma={SIGMA_SUAVIZACAO})...")
     grid_z_suave = gaussian_filter(grid_z_linear, sigma=SIGMA_SUAVIZACAO)
     
-    # 8. Plotar e Salvar
     print("Gerando o gráfico...")
-    # Ajustei o figsize para ficar mais comprido (largura 13, altura 7)
     plt.figure(figsize=(13, 7))
+    ax = plt.gca()
     
-    im = plt.imshow(grid_z_suave.T, origin='lower', 
-                    extent=[x_min, x_max, y_min, y_max], 
-                    cmap='viridis', aspect='auto')
+    im = ax.imshow(grid_z_suave.T, origin='lower', 
+                    extent=[x_min_plot, x_max_plot, y_min_plot, y_max_plot], 
+                    cmap='viridis', aspect='auto', zorder=1)
     
-    plt.scatter(x, y, c='red', s=15, edgecolor='black', label='Pontos de Medição')
+    ax.grid(True, linestyle=':', alpha=0.3, color='white', zorder=2)
+    
+    draw_corridor_and_doors(ax, df_portas, x_min_plot, x_max_plot, y_parede_inf, y_parede_sup)
+    
+    # Pontos de medição VERMELHOS
+    ax.scatter(x, y, c='red', s=20, edgecolor='black', label='Pontos de Medição', zorder=6, linewidth=0.8)
     
     plt.colorbar(im, label=f'Intensidade (dB) - {column_name}')
     plt.xlabel('Coordenada X (metros)')
     plt.ylabel('Coordenada Y (metros)')
-    plt.title(f'Mapa de Calor Suave - Rede {column_name}')
-    plt.legend()
-    plt.grid(True, linestyle=':', alpha=0.3, color='white')
+    plt.title(f'Rede {column_name}')
     
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.tight_layout()
+    # Move a legenda para FORA do gráfico, na parte inferior
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+              fancybox=False, shadow=False, ncol=1, frameon=False)
+    
+    plt.xlim(x_min_plot, x_max_plot)
+    plt.ylim(y_min_plot, y_max_plot)
+    
+    plt.subplots_adjust(left=0.08, right=0.92, top=0.95, bottom=0.2)
 
-    plt.savefig(output_filename)
+    nome_arquivo_final = f"heatmap_{column_name.lower()}.png"
+    
+    # [ MUDANÇA ] Adicionado o dpi=DPI_SAIDA para alta resolução
+    plt.savefig(nome_arquivo_final, dpi=DPI_SAIDA)
+    
     plt.close() 
-    print(f"Sucesso! Mapa salvo como '{output_filename}'")
+    print(f"Sucesso! Mapa salvo como '{nome_arquivo_final}' (Alta Resolução: {DPI_SAIDA} DPI)")
 
 def main():
-    print(f"Iniciando processo... Carregando dados de '{ARQUIVO_DADOS}'")
+    print(f"Iniciando processo...")
     
     try:
-        df = pd.read_csv(ARQUIVO_DADOS, sep=';', decimal='.')
-    except FileNotFoundError:
-        print(f"Erro: Arquivo '{ARQUIVO_DADOS}' não encontrado.")
+        df_medicoes = pd.read_csv(ARQUIVO_DADOS, sep=';', decimal='.')
+        print(f"Carregados dados de medição de '{ARQUIVO_DADOS}'")
+        df_portas = pd.read_csv(ARQUIVO_PORTAS, sep=';', decimal='.')
+        print(f"Carregados dados das portas de '{ARQUIVO_PORTAS}'")
+        
+    except FileNotFoundError as e:
+        print(f"Erro Crítico: Arquivo não encontrado.")
+        print(f"Detalhe: {e}")
         return
     except Exception as e:
         print(f"Erro ao ler o CSV: {e}")
         return
 
-    df = limpar_dados_db(df, COLUNAS_PARA_MAPEAR)
+    # Define as margens (folga) do gráfico como ZERO
+    MARGEM_X = 0.0 # Sem folga lateral
+    MARGEM_Y = 0.0 # Sem folga vertical
+
+    X_MIN_PLOT = df_medicoes['X'].min() - MARGEM_X
+    X_MAX_PLOT = df_medicoes['X'].max() + MARGEM_X
+    Y_MIN_PLOT = df_medicoes['Y'].min() - MARGEM_Y
+    Y_MAX_PLOT = df_medicoes['Y'].max() + MARGEM_Y
+    
+    # Coordenadas exatas das paredes (sem margem)
+    Y_PAREDE_INFERIOR = df_medicoes['Y'].min()
+    Y_PAREDE_SUPERIOR = df_medicoes['Y'].max()
+    
+    print(f"Limites do plot definidos: X({X_MIN_PLOT:.2f} a {X_MAX_PLOT:.2f}), Y({Y_MIN_PLOT:.2f} a {Y_MAX_PLOT:.2f})")
+    print(f"Paredes do corredor em Y={Y_PAREDE_INFERIOR} e Y={Y_PAREDE_SUPERIOR}")
+
+    df_processed = limpar_dados_db(df_medicoes.copy(), COLUNAS_PARA_MAPEAR, VALOR_PONTO_MORTO)
     
     for coluna in COLUNAS_PARA_MAPEAR:
-        if coluna in df.columns:
-            nome_arquivo = f"heatmap_{coluna.lower()}.png"
-            generate_heatmap(df, coluna, nome_arquivo, 
-                             X_MIN, X_MAX, Y_MIN, Y_MAX)
+        if coluna in df_processed.columns:
+            generate_heatmap(df_processed, df_portas, coluna, 
+                             f"heatmap_{coluna.lower()}.png", 
+                             X_MIN_PLOT, X_MAX_PLOT, Y_MIN_PLOT, Y_MAX_PLOT,
+                             Y_PAREDE_INFERIOR, Y_PAREDE_SUPERIOR)
         else:
-            print(f"\nAviso: Coluna '{coluna}' não encontrada no CSV. Pulando...")
+            print(f"\nAviso: Coluna '{coluna}' não encontrada no CSV de medições. Pulando...")
             
     print("\nProcesso finalizado. Todos os mapas foram gerados.")
 
