@@ -6,6 +6,3 @@ __pycache__/
 .venv/
 venv/
 env/
-
-# Imagem de saída
-*.png
