@@ -1,11 +1,10 @@
 # Projeto Heatmap de Sinal Wi-Fi
-Teste
+
 Este script Python gera um mapa de calor (heatmap) interpolado da intensidade do sinal Wi-Fi a partir de medições de coordenadas (X, Y) e potência de sinal (dB).
 
-## Como Rodar o Projeto (Para quem não usa Anaconda)
+## Como Rodar o Projeto 
 
 1.  **Crie um Ambiente Virtual:**
-    (Dentro desta pasta, `com_dados/relatorio`)
     ```bash
     python3 -m venv venv
     ```
