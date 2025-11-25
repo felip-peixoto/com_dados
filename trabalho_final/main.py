@@ -6,9 +6,9 @@ from gui.receptor import ReceptorGUI
 class MainApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Sistema de Transmissão HDB3")
+        self.root.title("Projeto Final - Codificação HDB3")
         self.root.geometry("600x450")
-        self.root.configure(bg="#f0f2f5") # Um cinza bem clarinho, moderno
+        self.root.configure(bg="#f0f2f5")
 
         # --- Definição de Fontes ---
         # Fonte para Títulos (Moderna e Limpa)
@@ -27,11 +27,11 @@ class MainApp:
         frame.configure(highlightbackground="#d1d5db", highlightthickness=1)
 
         # Título
-        lbl_titulo = tk.Label(frame, text="Codificação de Linha HDB3", 
+        lbl_titulo = tk.Label(frame, text="Projeto Final", 
                               font=self.font_titulo, bg="white", fg="#1f2937")
         lbl_titulo.pack(pady=(10, 5))
         
-        lbl_sub = tk.Label(frame, text="Comunicação de Dados - Trabalho Final", 
+        lbl_sub = tk.Label(frame, text="Codificação HDB3", 
                            font=("Segoe UI", 10), bg="white", fg="#6b7280")
         lbl_sub.pack(pady=(0, 30))
 
@@ -54,7 +54,7 @@ class MainApp:
         btn_receptor.pack(pady=10)
 
         # Rodapé
-        tk.Label(frame, text="Engenharia de Redes • UTFPR", 
+        tk.Label(frame, text="ELET30 - Comunicação De Dados", 
                  font=("Consolas", 9), bg="white", fg="#9ca3af").pack(pady=(40, 0))
 
     def iniciar_emissor(self):

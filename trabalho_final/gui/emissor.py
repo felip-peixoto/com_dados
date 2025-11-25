@@ -42,7 +42,7 @@ class EmissorGUI:
         self.chk_cripto.pack(side='left', padx=20)
 
         # 3. Mensagem Criptografada
-        tk.Label(master, text="Mensagem Criptografada (Texto Intermediário):", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
+        tk.Label(master, text="Mensagem Criptografada:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
         self.txt_cripto = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
         self.txt_cripto.pack(padx=20, pady=0)
         

@@ -35,12 +35,12 @@ class ReceptorGUI:
                   relief='flat', cursor='hand2').pack(side='left', padx=15)
         
         # 2. Gráfico Recebido
-        tk.Label(master, text="Gráfico HDB3 Recebido:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(10,5))
+        tk.Label(master, text="Gráfico HDB3:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(10,5))
         self.frame_plot = tk.Frame(master, height=200, bg="white", bd=1, relief="solid")
         self.frame_plot.pack(fill='both', expand=True, padx=20, pady=5)
         
         # 3. Binário Decodificado
-        tk.Label(master, text="Mensagem Binária Decodificada:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
+        tk.Label(master, text="Mensagem em Binário:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
         self.txt_bin = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
         self.txt_bin.pack(padx=20, pady=0)
         
@@ -62,7 +62,7 @@ class ReceptorGUI:
                   relief='flat', cursor='hand2').pack(side='left', padx=10)
         
         # 6. Mensagem Final
-        tk.Label(master, text="Mensagem Final (Texto Claro):", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
+        tk.Label(master, text="Mensagem Original:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
         self.txt_final = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_texto)
         self.txt_final.pack(padx=20, pady=(0, 20))
         

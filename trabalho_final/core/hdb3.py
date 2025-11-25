@@ -5,7 +5,7 @@ def encode_hdb3(binary_string):
     """
     binary_string = binary_string.replace(" ", "")
     signal = []
-    last_polarity = 1  # começa positivo
+    last_polarity = -1  # começa positivo
     pulsos_desde_substituicao = 0
     
     i = 0

@@ -9,8 +9,8 @@ def plotar_hdb3(parent_frame, sinal_hdb3, titulo="Sinal HDB3"):
     
     x = list(range(len(sinal_hdb3)))
     ax.step(x, sinal_hdb3, where='post', linewidth=2, color='blue')
-    ax.set_xlabel('Índice do Bit')
-    ax.set_ylabel('Voltagem')
+    ax.set_xlabel('Tempo')
+    ax.set_ylabel('Tensão')
     ax.set_title(titulo)
     ax.set_ylim(-1.5, 1.5)
     ax.grid(True, alpha=0.3)
