@@ -89,28 +89,6 @@ class ReceptorGUI:
             return
         
         chave = self.entry_chave.get().strip()
-        
-        # Se NÃO tiver chave digitada, assume que é o teste sem criptografia
-        if not chave:
-            self.txt_final.config(state='normal')
-            self.txt_final.delete("1.0", tk.END)
-            self.txt_final.insert("1.0", self.texto_cifrado) # Copia direto
-            self.txt_final.config(state='disabled')
-            messagebox.showinfo("Info", "Texto copiado sem descriptografar (Modo Teste).")
-            return
-        
-        # Se TIVER chave, faz o processo normal
-        texto_final = decifrar_vigenere(self.texto_cifrado, chave)
-        
-        self.txt_final.config(state='normal')
-        self.txt_final.delete("1.0", tk.END)
-        self.txt_final.insert("1.0", texto_final)
-        self.txt_final.config(state='disabled')
-        if not self.texto_cifrado:
-            messagebox.showwarning("Aviso", "Nenhum sinal recebido ainda.")
-            return
-        
-        chave = self.entry_chave.get().strip()
         if not chave:
             messagebox.showwarning("Aviso", "Insira a chave.")
             return
