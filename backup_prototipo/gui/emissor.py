@@ -9,7 +9,7 @@ from gui.plot_utils import plotar_hdb3
 class EmissorGUI:
     def __init__(self, master):
         master.title("Host A - Emissor")
-        master.geometry("900x750")  # Aumentei um pouco a altura para caber o botão
+        master.geometry("900x700")
         
         # Mensagem original
         tk.Label(master, text="Mensagem Original:").pack(anchor='w', padx=10, pady=(10,0))
@@ -20,12 +20,6 @@ class EmissorGUI:
         tk.Label(master, text="Chave Vigenère:").pack(anchor='w', padx=10)
         self.entry_chave = tk.Entry(master, width=100)
         self.entry_chave.pack(padx=10, pady=5)
-
-        # --- NOVO: Checkbox para Ativar/Desativar Criptografia ---
-        self.var_usar_cripto = tk.BooleanVar(value=True) # Começa marcado
-        self.chk_cripto = tk.Checkbutton(master, text="Ativar Criptografia", variable=self.var_usar_cripto)
-        self.chk_cripto.pack(anchor='w', padx=10)
-        # ---------------------------------------------------------
         
         # Mensagem criptografada
         tk.Label(master, text="Mensagem Criptografada:").pack(anchor='w', padx=10)
@@ -47,7 +41,7 @@ class EmissorGUI:
         frame_rede.pack(pady=10)
         tk.Label(frame_rede, text="IP Destino:").pack(side='left')
         self.entry_ip = tk.Entry(frame_rede, width=20)
-        self.entry_ip.insert(0, "192.168.0.100") # Exemplo de IP
+        self.entry_ip.insert(0, "192.168.0.100")
         self.entry_ip.pack(side='left', padx=5)
         tk.Label(frame_rede, text="Porta:").pack(side='left')
         self.entry_porta = tk.Entry(frame_rede, width=10)
@@ -58,72 +52,8 @@ class EmissorGUI:
         tk.Button(master, text="ENVIAR", command=self.enviar, bg='green', fg='white', font=('Arial', 14, 'bold')).pack(pady=10)
         
         self.sinal_hdb3 = None
-
+    
     def enviar(self):
-        msg = self.txt_msg.get("1.0", tk.END).strip()
-        chave = self.entry_chave.get().strip()
-        usar_cripto = self.var_usar_cripto.get() # Verifica se o checkbox está marcado
-        
-        if not msg:
-            messagebox.showwarning("Aviso", "Preencha a mensagem.")
-            return
-        
-        texto_para_binario_input = ""
-
-        # Lógica Condicional: Com ou Sem Criptografia
-        if usar_cripto:
-            if not chave:
-                messagebox.showwarning("Aviso", "Preencha a chave para criptografar.")
-                return
-            # Criptografa normalmente
-            cifrado = cifrar_vigenere(msg, chave)
-            texto_para_binario_input = cifrado
-            
-            # Mostra na tela
-            self.txt_cripto.config(state='normal')
-            self.txt_cripto.delete("1.0", tk.END)
-            self.txt_cripto.insert("1.0", cifrado)
-            self.txt_cripto.config(state='disabled')
-        else:
-            # NÃO Criptografa (Modo de Teste)
-            texto_para_binario_input = msg
-            
-            # Mostra aviso visual
-            self.txt_cripto.config(state='normal')
-            self.txt_cripto.delete("1.0", tk.END)
-            self.txt_cripto.insert("1.0", f"[SEM CRIPTOGRAFIA]: {msg}")
-            self.txt_cripto.config(state='disabled')
-        
-        # 2. Binário
-        binario = texto_para_binario(texto_para_binario_input)
-        if not binario:
-            messagebox.showerror("Erro", "Falha ao converter para binário.")
-            return
-        self.txt_bin.config(state='normal')
-        self.txt_bin.delete("1.0", tk.END)
-        self.txt_bin.insert("1.0", binario)
-        self.txt_bin.config(state='disabled')
-        
-        # 3. HDB3
-        self.sinal_hdb3 = encode_hdb3(binario)
-        
-        # 4. Plot
-        for widget in self.frame_plot.winfo_children():
-            widget.destroy()
-        plotar_hdb3(self.frame_plot, self.sinal_hdb3, "Sinal HDB3 Gerado")
-        
-        # 5. Enviar
-        ip = self.entry_ip.get().strip()
-        try:
-            porta = int(self.entry_porta.get().strip())
-        except ValueError:
-            messagebox.showerror("Erro", "Porta inválida.")
-            return
-        
-        if enviar_sinal(ip, porta, self.sinal_hdb3):
-            messagebox.showinfo("Sucesso", "Sinal enviado!")
-        else:
-            messagebox.showerror("Erro", "Falha ao enviar sinal.")
         msg = self.txt_msg.get("1.0", tk.END).strip()
         chave = self.entry_chave.get().strip()
         
