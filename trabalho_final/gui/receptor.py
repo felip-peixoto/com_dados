@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import messagebox, scrolledtext, font
 import threading
 from core.hdb3 import decode_hdb3
 from core.conversor import binario_para_texto
@@ -9,60 +9,92 @@ from gui.plot_utils import plotar_hdb3
 
 class ReceptorGUI:
     def __init__(self, master):
+        self.master = master
         master.title("Host B - Receptor")
-        master.geometry("900x750")
+        master.geometry("950x850")
+        master.configure(bg="#f0f2f5") # Fundo moderno
+
+        # --- Estilos de Fonte ---
+        f_titulo = font.Font(family="Segoe UI", size=11, weight="bold")
+        f_texto = font.Font(family="Segoe UI", size=10)
+        f_code = font.Font(family="Consolas", size=10) # Para binário e cripto
+
+        # --- Layout ---
+
+        # 1. Configuração de Porta e Botão Aguardar
+        frame_cfg = tk.Frame(master, bg="#e5e7eb", bd=1, relief="solid")
+        frame_cfg.pack(pady=15, ipadx=10, ipady=5)
         
-        # Config
-        frame_cfg = tk.Frame(master)
-        frame_cfg.pack(pady=10)
-        tk.Label(frame_cfg, text="Porta:").pack(side='left')
-        self.entry_porta = tk.Entry(frame_cfg, width=10)
+        tk.Label(frame_cfg, text="Porta de Escuta:", font=("Segoe UI", 10), bg="#e5e7eb").pack(side='left', padx=5)
+        self.entry_porta = tk.Entry(frame_cfg, width=10, font=f_code)
         self.entry_porta.insert(0, "5000")
         self.entry_porta.pack(side='left', padx=5)
-        tk.Button(frame_cfg, text="Aguardar Sinal", command=self.iniciar_recepcao, bg='blue', fg='white').pack(side='left', padx=10)
         
-        # Gráfico recebido
-        tk.Label(master, text="Gráfico HDB3 Recebido:").pack(anchor='w', padx=10)
-        self.frame_plot = tk.Frame(master, height=200)
-        self.frame_plot.pack(fill='both', expand=True, padx=10, pady=5)
+        tk.Button(frame_cfg, text="AGUARDAR SINAL", command=self.iniciar_recepcao, 
+                  bg='#3b82f6', fg='white', font=("Segoe UI", 10, "bold"), 
+                  relief='flat', cursor='hand2').pack(side='left', padx=15)
         
-        # Binário decodificado
-        tk.Label(master, text="Mensagem Binária Decodificada:").pack(anchor='w', padx=10)
-        self.txt_bin = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled')
-        self.txt_bin.pack(padx=10, pady=5)
+        # 2. Gráfico Recebido
+        tk.Label(master, text="Gráfico HDB3 Recebido:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(10,5))
+        self.frame_plot = tk.Frame(master, height=200, bg="white", bd=1, relief="solid")
+        self.frame_plot.pack(fill='both', expand=True, padx=20, pady=5)
         
-        # Criptografado
-        tk.Label(master, text="Mensagem Criptografada:").pack(anchor='w', padx=10)
-        self.txt_cripto = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled')
-        self.txt_cripto.pack(padx=10, pady=5)
+        # 3. Binário Decodificado
+        tk.Label(master, text="Mensagem Binária Decodificada:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
+        self.txt_bin = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
+        self.txt_bin.pack(padx=20, pady=0)
         
-        # Chave para decifrar
-        tk.Label(master, text="Chave Vigenère:").pack(anchor='w', padx=10)
-        self.entry_chave = tk.Entry(master, width=100)
-        self.entry_chave.pack(padx=10, pady=5)
-        tk.Button(master, text="Decifrar", command=self.decifrar).pack(pady=5)
+        # 4. Mensagem Criptografada (Intermediária)
+        tk.Label(master, text="Mensagem Criptografada (Ou Texto Puro):", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
+        self.txt_cripto = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
+        self.txt_cripto.pack(padx=20, pady=0)
         
-        # Mensagem final
-        tk.Label(master, text="Mensagem Final (Texto Claro):").pack(anchor='w', padx=10)
-        self.txt_final = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled')
-        self.txt_final.pack(padx=10, pady=5)
+        # 5. Área de Descriptografia
+        frame_chave = tk.Frame(master, bg="#f0f2f5")
+        frame_chave.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(frame_chave, text="Chave Vigenère:", font=f_titulo, bg="#f0f2f5").pack(side='left')
+        self.entry_chave = tk.Entry(frame_chave, width=40, font=f_texto)
+        self.entry_chave.pack(side='left', padx=10)
+        
+        tk.Button(frame_chave, text="DECIFRAR", command=self.decifrar, 
+                  bg='#8b5cf6', fg='white', font=("Segoe UI", 10, "bold"), # Roxo
+                  relief='flat', cursor='hand2').pack(side='left', padx=10)
+        
+        # 6. Mensagem Final
+        tk.Label(master, text="Mensagem Final (Texto Claro):", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
+        self.txt_final = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_texto)
+        self.txt_final.pack(padx=20, pady=(0, 20))
         
         self.sinal_recebido = None
         self.texto_cifrado = None
     
     def iniciar_recepcao(self):
-        porta = int(self.entry_porta.get().strip())
+        try:
+            porta = int(self.entry_porta.get().strip())
+        except ValueError:
+            messagebox.showerror("Erro", "Porta inválida.")
+            return
+            
         threading.Thread(target=self.receber, args=(porta,), daemon=True).start()
-        messagebox.showinfo("Aguardando", f"Escutando na porta {porta}...")
+        messagebox.showinfo("Aguardando", f"Escutando na porta {porta}...\nO programa pode parecer travado até receber algo.")
     
     def receber(self, porta):
+        # Nota: receber_sinal é bloqueante, por isso roda em thread separada
         self.sinal_recebido = receber_sinal(porta)
         if self.sinal_recebido:
+            # Tkinter não é thread-safe, usamos after ou processamos direto se não houver conflito de loop
+            # Aqui chamamos direto pois a thread vai morrer logo em seguida
             self.processar_sinal()
         else:
-            messagebox.showerror("Erro", "Falha ao receber sinal.")
+            messagebox.showerror("Erro", "Falha ao receber sinal ou timeout.")
     
     def processar_sinal(self):
+        # Limpa o campo final para evitar confusão de mensagens anteriores
+        self.txt_final.config(state='normal')
+        self.txt_final.delete("1.0", tk.END)
+        self.txt_final.config(state='disabled')
+
         # Plot
         for widget in self.frame_plot.winfo_children():
             widget.destroy()
@@ -75,13 +107,16 @@ class ReceptorGUI:
         self.txt_bin.insert("1.0", binario)
         self.txt_bin.config(state='disabled')
         
-        # Binário -> Texto cifrado
+        # Binário -> Texto cifrado (ou texto puro se não houve criptografia)
         self.texto_cifrado = binario_para_texto(binario)
+        
+        self.txt_cripto.config(state='normal')
+        self.txt_cripto.delete("1.0", tk.END)
         if self.texto_cifrado:
-            self.txt_cripto.config(state='normal')
-            self.txt_cripto.delete("1.0", tk.END)
             self.txt_cripto.insert("1.0", self.texto_cifrado)
-            self.txt_cripto.config(state='disabled')
+        else:
+            self.txt_cripto.insert("1.0", "[ERRO DE DECODIFICAÇÃO BINÁRIA]")
+        self.txt_cripto.config(state='disabled')
     
     def decifrar(self):
         if not self.texto_cifrado:
@@ -90,33 +125,23 @@ class ReceptorGUI:
         
         chave = self.entry_chave.get().strip()
         
-        # Se NÃO tiver chave digitada, assume que é o teste sem criptografia
+        # LÓGICA CORRIGIDA E SEM DUPLICAÇÃO
         if not chave:
+            # Modo Teste (Sem Criptografia)
+            # Apenas copia o texto intermediário para o final
             self.txt_final.config(state='normal')
             self.txt_final.delete("1.0", tk.END)
-            self.txt_final.insert("1.0", self.texto_cifrado) # Copia direto
+            self.txt_final.insert("1.0", self.texto_cifrado)
             self.txt_final.config(state='disabled')
-            messagebox.showinfo("Info", "Texto copiado sem descriptografar (Modo Teste).")
+            messagebox.showinfo("Modo Teste", "Texto copiado sem descriptografar (Chave vazia).")
             return
         
-        # Se TIVER chave, faz o processo normal
-        texto_final = decifrar_vigenere(self.texto_cifrado, chave)
-        
-        self.txt_final.config(state='normal')
-        self.txt_final.delete("1.0", tk.END)
-        self.txt_final.insert("1.0", texto_final)
-        self.txt_final.config(state='disabled')
-        if not self.texto_cifrado:
-            messagebox.showwarning("Aviso", "Nenhum sinal recebido ainda.")
-            return
-        
-        chave = self.entry_chave.get().strip()
-        if not chave:
-            messagebox.showwarning("Aviso", "Insira a chave.")
-            return
-        
-        texto_final = decifrar_vigenere(self.texto_cifrado, chave)
-        self.txt_final.config(state='normal')
-        self.txt_final.delete("1.0", tk.END)
-        self.txt_final.insert("1.0", texto_final)
-        self.txt_final.config(state='disabled')
+        # Modo Normal (Com Criptografia)
+        try:
+            texto_final = decifrar_vigenere(self.texto_cifrado, chave)
+            self.txt_final.config(state='normal')
+            self.txt_final.delete("1.0", tk.END)
+            self.txt_final.insert("1.0", texto_final)
+            self.txt_final.config(state='disabled')
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao decifrar: {e}")

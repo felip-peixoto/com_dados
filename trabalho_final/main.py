@@ -6,52 +6,66 @@ from gui.receptor import ReceptorGUI
 class MainApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Sistema de Transmissão HDB3 - Trabalho Final")
-        self.root.geometry("500x400")
-        self.root.configure(bg="#f0f0f0")
+        self.root.title("Sistema de Transmissão HDB3")
+        self.root.geometry("600x450")
+        self.root.configure(bg="#f0f2f5") # Um cinza bem clarinho, moderno
 
-        # Estilos de Fonte
-        title_font = font.Font(family="Helvetica", size=16, weight="bold")
-        btn_font = font.Font(family="Helvetica", size=12, weight="bold")
+        # --- Definição de Fontes ---
+        # Fonte para Títulos (Moderna e Limpa)
+        self.font_titulo = font.Font(family="Segoe UI", size=18, weight="bold")
+        # Fonte para Texto Geral
+        self.font_texto = font.Font(family="Segoe UI", size=11)
+        # Fonte para Botões (Levemente maior)
+        self.font_botao = font.Font(family="Segoe UI", size=12, weight="bold")
+        
+        # --- Layout ---
+        # Container Central (Frame) com efeito de "cartão" (borda suave)
+        frame = tk.Frame(root, bg="white", bd=1, relief="solid")
+        frame.pack(expand=True, padx=20, pady=20, ipadx=20, ipady=20)
+        
+        # Borda decorativa interna (opcional, truque visual)
+        frame.configure(highlightbackground="#d1d5db", highlightthickness=1)
 
-        # Container Central
-        frame = tk.Frame(root, bg="#f0f0f0")
-        frame.pack(expand=True)
+        # Título
+        lbl_titulo = tk.Label(frame, text="Codificação de Linha HDB3", 
+                              font=self.font_titulo, bg="white", fg="#1f2937")
+        lbl_titulo.pack(pady=(10, 5))
+        
+        lbl_sub = tk.Label(frame, text="Comunicação de Dados - Trabalho Final", 
+                           font=("Segoe UI", 10), bg="white", fg="#6b7280")
+        lbl_sub.pack(pady=(0, 30))
 
-        tk.Label(frame, text="Escolha o Modo de Operação", 
-                 font=title_font, bg="#f0f0f0", fg="#333").pack(pady=30)
-
-        # Botão Emissor
-        btn_emissor = tk.Button(frame, text="Host A - EMISSOR", 
+        # Botão Emissor (Verde Moderno)
+        btn_emissor = tk.Button(frame, text="Iniciar HOST A (Emissor)", 
                                 command=self.iniciar_emissor,
-                                bg="#4CAF50", fg="white", 
-                                font=btn_font, width=25, height=2,
-                                activebackground="#45a049")
+                                bg="#10b981", fg="white", # Verde Esmeralda
+                                font=self.font_botao, 
+                                relief="flat", cursor="hand2",
+                                width=30, height=2)
         btn_emissor.pack(pady=10)
 
-        # Botão Receptor
-        btn_receptor = tk.Button(frame, text="Host B - RECEPTOR", 
+        # Botão Receptor (Azul Moderno)
+        btn_receptor = tk.Button(frame, text="Iniciar HOST B (Receptor)", 
                                  command=self.iniciar_receptor,
-                                 bg="#2196F3", fg="white", 
-                                 font=btn_font, width=25, height=2,
-                                 activebackground="#1e88e5")
+                                 bg="#3b82f6", fg="white", # Azul Real
+                                 font=self.font_botao,
+                                 relief="flat", cursor="hand2",
+                                 width=30, height=2)
         btn_receptor.pack(pady=10)
 
-        tk.Label(frame, text="Engenharia de Redes - UTFPR", 
-                 bg="#f0f0f0", fg="#777").pack(pady=40)
+        # Rodapé
+        tk.Label(frame, text="Engenharia de Redes • UTFPR", 
+                 font=("Consolas", 9), bg="white", fg="#9ca3af").pack(pady=(40, 0))
 
     def iniciar_emissor(self):
         self.limpar_janela()
-        # Inicia a GUI do Emissor na mesma janela (root)
         EmissorGUI(self.root)
 
     def iniciar_receptor(self):
         self.limpar_janela()
-        # Inicia a GUI do Receptor na mesma janela (root)
         ReceptorGUI(self.root)
 
     def limpar_janela(self):
-        # Remove todos os widgets do Menu Principal (botões, labels)
         for widget in self.root.winfo_children():
             widget.destroy()
 
