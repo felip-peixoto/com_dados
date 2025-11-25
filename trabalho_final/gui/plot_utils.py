@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-def plotar_hdb3(parent_frame, sinal_hdb3, titulo="Sinal HDB3"):
+def plotar_hdb3(parent_frame, sinal_hdb3, titulo="Sinal"):
     """
     Plota forma de onda HDB3 em degraus dentro de um frame Tkinter.
     """
