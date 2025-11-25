@@ -38,10 +38,6 @@ class ReceptorGUI:
         tk.Label(master, text="Gráfico HDB3 Recebido:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(10,5))
         self.frame_plot = tk.Frame(master, height=200, bg="white", bd=1, relief="solid")
         self.frame_plot.pack(fill='both', expand=True, padx=20, pady=5)
-
-        tk.Label(master, text="Interpretação Simbólica (Detectada):", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
-        self.txt_simbolos = scrolledtext.ScrolledText(master, height=2, width=100, state='disabled', font=f_code)
-        self.txt_simbolos.pack(padx=20, pady=0)
         
         # 3. Binário Decodificado
         tk.Label(master, text="Mensagem Binária Decodificada:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
@@ -104,16 +100,8 @@ class ReceptorGUI:
             widget.destroy()
         plotar_hdb3(self.frame_plot, self.sinal_recebido, "Sinal HDB3 Recebido")
         
-        # Decodificar HDB3 (Agora pega Binário E Símbolos)
-        binario, string_simbolica = decode_hdb3(self.sinal_recebido)
-        
-        # Preenche o campo novo de Símbolos
-        self.txt_simbolos.config(state='normal')
-        self.txt_simbolos.delete("1.0", tk.END)
-        self.txt_simbolos.insert("1.0", string_simbolica)
-        self.txt_simbolos.config(state='disabled')
-        
-        # Preenche o campo de Binário
+        # Decodificar HDB3
+        binario = decode_hdb3(self.sinal_recebido)
         self.txt_bin.config(state='normal')
         self.txt_bin.delete("1.0", tk.END)
         self.txt_bin.insert("1.0", binario)
