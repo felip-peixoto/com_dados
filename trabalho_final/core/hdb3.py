@@ -40,34 +40,57 @@ def encode_hdb3(binary_string):
 def decode_hdb3(signal):
     """
     Decodifica sinal HDB3 para string binária.
-    Versão corrigida para evitar erros de polaridade acumulada.
+    Versão corrigida: verifica ESTRITAMENTE a polaridade para não confundir dados com violação.
     """
     binary = []
     i = 0
-    last_pulse_polarity = 1  # Assume estado inicial padrão (positivo)
+    last_pulse_polarity = 1  # Estado inicial deve bater com o encoder (positivo)
     
     while i < len(signal):
-        # Tenta detectar B00V ou 000V (sequências de 4 pulsos)
-        if i <= len(signal) - 4:
-            # Padrão de violação (o 4º elemento é a violação V)
-            # Verifica se signal[i+3] é diferente de 0 (é um pulso)
-            if signal[i+1] == 0 and signal[i+2] == 0 and signal[i+3] != 0:
-                # Aqui simplificamos: se achou X00V, assume que é HDB3 substitution
-                # E converte os 4 slots para '0000'
-                binary.extend(['0', '0', '0', '0'])
-                # Atualiza a polaridade baseada na violação recebida para manter sincronia
-                last_pulse_polarity = signal[i+3] 
-                i += 4
-                continue
+        decoded = False
         
-        # Bit normal
-        val = signal[i]
-        if val == 0:
-            binary.append('0')
-        else:
-            binary.append('1')
-            last_pulse_polarity = val
+        # 1. Tenta detectar B00V (Padrão: Pulso, 0, 0, Pulso)
+        # Regra: O primeiro e o último pulso devem ter o MESMO sinal (Violação)
+        if i <= len(signal) - 4:
+            val_b = signal[i]
+            val_01 = signal[i+1]
+            val_02 = signal[i+2]
+            val_v = signal[i+3]
             
-        i += 1
+            if val_b != 0 and val_01 == 0 and val_02 == 0 and val_v != 0:
+                if val_b == val_v: # AQUI ESTÁ A CORREÇÃO: Checa polaridade
+                    # Achou B00V -> Substitui por 0000
+                    binary.extend(['0', '0', '0', '0'])
+                    last_pulse_polarity = val_v # Atualiza polaridade
+                    i += 4
+                    decoded = True
+                    continue
+
+        # 2. Tenta detectar 000V (Padrão: 0, 0, 0, Pulso)
+        # Regra: O pulso V deve ter o MESMO sinal do último pulso histórico
+        if not decoded and i <= len(signal) - 4:
+            val_01 = signal[i]
+            val_02 = signal[i+1]
+            val_03 = signal[i+2]
+            val_v = signal[i+3]
+            
+            if val_01 == 0 and val_02 == 0 and val_03 == 0 and val_v != 0:
+                if val_v == last_pulse_polarity: # AQUI ESTÁ A CORREÇÃO: Checa polaridade
+                    # Achou 000V -> Substitui por 0000
+                    binary.extend(['0', '0', '0', '0'])
+                    last_pulse_polarity = val_v # Atualiza polaridade
+                    i += 4
+                    decoded = True
+                    continue
+        
+        # 3. Bit Normal
+        if not decoded:
+            val = signal[i]
+            if val == 0:
+                binary.append('0')
+            else:
+                binary.append('1')
+                last_pulse_polarity = val
+            i += 1
     
     return ''.join(binary)
