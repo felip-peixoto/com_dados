@@ -18,7 +18,7 @@ def enviar_sinal(host, porta, sinal_hdb3):
 
 def receber_sinal(porta, timeout=30):
     """
-    Aguarda conexão e recebe sinal HDB3.
+    Aguarda conexão e recebe sinal HDB3 (COM LOOP DE BUFFER).
     Retorna lista de voltagens ou None.
     """
     try:
@@ -26,10 +26,24 @@ def receber_sinal(porta, timeout=30):
             s.bind(('0.0.0.0', porta))
             s.listen(1)
             s.settimeout(timeout)
+            print(f"Aguardando conexão na porta {porta}...")
             conn, addr = s.accept()
             with conn:
-                dados = conn.recv(65536).decode('utf-8')
-                return json.loads(dados)
+                print(f"Conectado por {addr}")
+                
+                # --- SOLUÇÃO PARA TEXTÃO: LER EM LOOP ---
+                dados_completos = b""
+                while True:
+                    # Lê pedaços de 4096 bytes
+                    parte = conn.recv(4096)
+                    if not parte:
+                        break # Fim da transmissão
+                    dados_completos += parte
+                
+                # Decodifica só no final
+                dados_str = dados_completos.decode('utf-8')
+                return json.loads(dados_str)
+
     except socket.timeout:
         print("Timeout aguardando conexão.")
         return None

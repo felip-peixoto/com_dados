@@ -10,23 +10,15 @@ class MainApp:
         self.root.geometry("600x450")
         self.root.configure(bg="#f0f2f5")
 
-        # --- Definição de Fontes ---
-        # Fonte para Títulos (Moderna e Limpa)
         self.font_titulo = font.Font(family="Segoe UI", size=18, weight="bold")
-        # Fonte para Texto Geral
         self.font_texto = font.Font(family="Segoe UI", size=11)
-        # Fonte para Botões (Levemente maior)
         self.font_botao = font.Font(family="Segoe UI", size=12, weight="bold")
         
-        # --- Layout ---
-        # Container Central (Frame) com efeito de "cartão" (borda suave)
         frame = tk.Frame(root, bg="white", bd=1, relief="solid")
         frame.pack(expand=True, padx=20, pady=20, ipadx=20, ipady=20)
         
-        # Borda decorativa interna (opcional, truque visual)
         frame.configure(highlightbackground="#d1d5db", highlightthickness=1)
 
-        # Título
         lbl_titulo = tk.Label(frame, text="Projeto Final", 
                               font=self.font_titulo, bg="white", fg="#1f2937")
         lbl_titulo.pack(pady=(10, 5))
@@ -35,7 +27,6 @@ class MainApp:
                            font=("Segoe UI", 10), bg="white", fg="#6b7280")
         lbl_sub.pack(pady=(0, 30))
 
-        # Botão Emissor (Verde Moderno)
         btn_emissor = tk.Button(frame, text="Iniciar HOST A (Emissor)", 
                                 command=self.iniciar_emissor,
                                 bg="#10b981", fg="white", # Verde Esmeralda
@@ -44,7 +35,6 @@ class MainApp:
                                 width=30, height=2)
         btn_emissor.pack(pady=10)
 
-        # Botão Receptor (Azul Moderno)
         btn_receptor = tk.Button(frame, text="Iniciar HOST B (Receptor)", 
                                  command=self.iniciar_receptor,
                                  bg="#3b82f6", fg="white", # Azul Real
@@ -53,7 +43,6 @@ class MainApp:
                                  width=30, height=2)
         btn_receptor.pack(pady=10)
 
-        # Rodapé
         tk.Label(frame, text="ELET30 - Comunicação De Dados", 
                  font=("Consolas", 9), bg="white", fg="#9ca3af").pack(pady=(40, 0))
 

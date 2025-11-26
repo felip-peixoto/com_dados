@@ -40,7 +40,6 @@ def encode_hdb3(binary_string):
 def decode_hdb3(signal):
     """
     Decodifica sinal HDB3 para string binária.
-    Versão corrigida: verifica ESTRITAMENTE a polaridade para não confundir dados com violação.
     """
     binary = []
     i = 0

@@ -13,19 +13,15 @@ class EmissorGUI:
         master.geometry("950x850")
         master.configure(bg="#f0f2f5") # Fundo moderno
 
-        # --- Estilos de Fonte ---
         f_titulo = font.Font(family="Segoe UI", size=11, weight="bold")
         f_texto = font.Font(family="Segoe UI", size=10)
         f_code = font.Font(family="Consolas", size=10) # Para binário e cripto
 
-        # --- Layout ---
         
-        # 1. Mensagem Original
         tk.Label(master, text="Mensagem Original:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
         self.txt_msg = tk.Text(master, height=3, width=100, font=f_texto)
         self.txt_msg.pack(padx=20, pady=0)
         
-        # 2. Chave e Checkbox
         frame_chave = tk.Frame(master, bg="#f0f2f5")
         frame_chave.pack(fill='x', padx=20, pady=10)
         
@@ -33,7 +29,6 @@ class EmissorGUI:
         self.entry_chave = tk.Entry(frame_chave, width=40, font=f_texto)
         self.entry_chave.pack(side='left', padx=10)
         
-        # Checkbox Moderno
         self.var_usar_cripto = tk.BooleanVar(value=True)
         self.chk_cripto = tk.Checkbutton(frame_chave, text="Ativar Criptografia", 
                                        variable=self.var_usar_cripto, 
@@ -41,22 +36,18 @@ class EmissorGUI:
                                        activebackground="#f0f2f5")
         self.chk_cripto.pack(side='left', padx=20)
 
-        # 3. Mensagem Criptografada
         tk.Label(master, text="Mensagem Criptografada:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(5,5))
         self.txt_cripto = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
         self.txt_cripto.pack(padx=20, pady=0)
         
-        # 4. Binário
         tk.Label(master, text="Mensagem em Binário:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
         self.txt_bin = scrolledtext.ScrolledText(master, height=3, width=100, state='disabled', font=f_code)
         self.txt_bin.pack(padx=20, pady=0)
         
-        # 5. Gráfico
         tk.Label(master, text="Gráfico HDB3:", font=f_titulo, bg="#f0f2f5").pack(anchor='w', padx=20, pady=(15,5))
         self.frame_plot = tk.Frame(master, height=250, bg="white", bd=1, relief="solid")
         self.frame_plot.pack(fill='both', expand=True, padx=20, pady=5)
         
-        # 6. Rede
         frame_rede = tk.Frame(master, bg="#e5e7eb", bd=1, relief="solid")
         frame_rede.pack(pady=20, ipadx=10, ipady=5)
         
@@ -70,7 +61,6 @@ class EmissorGUI:
         self.entry_porta.insert(0, "5000")
         self.entry_porta.pack(side='left', padx=5)
         
-        # 7. Botão Enviar
         tk.Button(master, text="ENVIAR DADOS", command=self.enviar, 
                   bg='#10b981', fg='white', font=("Segoe UI", 12, "bold"), 
                   relief='flat', cursor='hand2', padx=20, pady=5).pack(pady=(0, 20))
@@ -88,32 +78,26 @@ class EmissorGUI:
         
         texto_para_processar = ""
 
-        # Lógica Condicional: Com ou Sem Criptografia
         if usar_cripto:
             if not chave:
                 messagebox.showwarning("Aviso", "Preencha a chave para criptografar.")
                 return
             
-            # Criptografa
             cifrado = cifrar_vigenere(msg, chave)
             texto_para_processar = cifrado
             
-            # Mostra na tela
             self.txt_cripto.config(state='normal')
             self.txt_cripto.delete("1.0", tk.END)
             self.txt_cripto.insert("1.0", cifrado)
             self.txt_cripto.config(state='disabled')
         else:
-            # NÃO Criptografa (Modo de Teste)
             texto_para_processar = msg
             
-            # Mostra aviso visual
             self.txt_cripto.config(state='normal')
             self.txt_cripto.delete("1.0", tk.END)
             self.txt_cripto.insert("1.0", f"[SEM CRIPTOGRAFIA]: {msg}")
             self.txt_cripto.config(state='disabled')
         
-        # 2. Binário (Usa o texto processado acima)
         binario = texto_para_binario(texto_para_processar)
         if not binario:
             messagebox.showerror("Erro", "Falha ao converter para binário.")
@@ -124,15 +108,12 @@ class EmissorGUI:
         self.txt_bin.insert("1.0", binario)
         self.txt_bin.config(state='disabled')
         
-        # 3. HDB3
         self.sinal_hdb3 = encode_hdb3(binario)
         
-        # 4. Plot
         for widget in self.frame_plot.winfo_children():
             widget.destroy()
         plotar_hdb3(self.frame_plot, self.sinal_hdb3, "Sinal HDB3 Gerado")
         
-        # 5. Enviar
         ip = self.entry_ip.get().strip()
         try:
             porta = int(self.entry_porta.get().strip())
